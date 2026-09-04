@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build posters.json — ICATS-FHM 2026</title>
+<style>
+  body{font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       margin:0;padding:24px;color:#16241C;background:#F6F7F4}
+  .wrap{max-width:720px;margin:0 auto}
+  textarea{width:100%;height:200px;padding:10px;border:1.5px solid #DCE2DB;
+           border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  button{margin:12px 0;padding:12px 18px;background:#175E45;color:#fff;border:0;
+         border-radius:8px;font-size:16px;cursor:pointer}
+  p{color:#5A6A60;font-size:14.5px}
+  code{background:#E7ECE6;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 style="font-size:20px;margin:0 0 6px">Build posters.json</h1>
+  <p>Export your abstract list from Excel as CSV with the header row
+     <code>id,title,presenter,affiliation,theme</code>. Paste it below.
+     Poster numbers must be <code>P01</code> to <code>P54</code>.</p>
+  <textarea id="csv" placeholder="id,title,presenter,affiliation,theme
+P01,Anthocyanin stability in cold storage,Aiko Tanaka,Hokkaido University Japan,Food Science"></textarea>
+  <button onclick="go()">Download posters.json</button>
+  <p id="msg"></p>
+</div>
+<script>
+function parse(text){
+  var rows=[],row=[],cell='',q=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(q){ if(c==='"'&&text[i+1]==='"'){cell+='"';i++} else if(c==='"'){q=false} else cell+=c }
+    else if(c==='"'){q=true}
+    else if(c===','){row.push(cell);cell=''}
+    else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}
+    else if(c!=='\r'){cell+=c}
+  }
+  if(cell||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(function(r){return r.join('').trim()});
+}
+function go(){
+  var rows=parse(document.getElementById('csv').value);
+  if(rows.length<2){document.getElementById('msg').textContent='Paste a header row plus at least one poster.';return}
+  var head=rows[0].map(function(h){return h.trim().toLowerCase()});
+  var out=rows.slice(1).map(function(r){
+    var o={};head.forEach(function(h,i){o[h]=(r[i]||'').trim()});
+    return {id:o.id.toUpperCase(),title:o.title,presenter:o.presenter,
+            affiliation:o.affiliation||'',theme:o.theme||''};
+  });
+  var bad=out.filter(function(p){return !/^P\d{2}$/.test(p.id)});
+  if(bad.length){document.getElementById('msg').textContent=
+    'Fix these poster numbers first: '+bad.map(function(p){return p.id||'(blank)'}).join(', ');return}
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
+  a.download='posters.json';a.click();
+  document.getElementById('msg').textContent=out.length+' posters written. Replace data/posters.json with this file.';
+}
+</script>
+</body>
+</html>

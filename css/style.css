@@ -1,0 +1,105 @@
+/* ICATS-FHM 2026 poster vote.
+   Palette from Hokudai dark green + birch. System fonts on purpose:
+   the hall wifi is the weak link, so nothing blocks first paint. */
+
+:root{
+  --paper:#F6F7F4;
+  --ink:#16241C;
+  --ink-soft:#5A6A60;
+  --green:#175E45;
+  --green-deep:#10402A;
+  --line:#DCE2DB;
+  --gold:#B0862B;
+  --silver:#7E8A85;
+  --bronze:#9C6836;
+  --tap:52px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font:400 17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+}
+button,input{font:inherit}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+
+/* ---- sticky ballot ---- */
+.bar{
+  position:sticky;top:0;z-index:20;
+  background:var(--green-deep);color:#EAF0EA;
+  padding-top:env(safe-area-inset-top);
+}
+.bar__inner{max-width:640px;margin:0 auto;padding:10px 16px 12px}
+.conf{margin:0 0 8px;font-size:12.5px;letter-spacing:.04em;color:#A8C3B2}
+.ballot{list-style:none;display:grid;gap:6px;margin:0;padding:0}
+.slot{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;
+  min-height:40px;padding:6px 10px;border-radius:7px;
+  background:rgba(255,255,255,.07);
+  border-left:4px solid rgba(255,255,255,.18);
+}
+.slot:focus-within{background:rgba(255,255,255,.14)}
+.slot[data-rank="1"]:focus-within{border-left-color:var(--gold)}
+.slot[data-rank="2"]:focus-within{border-left-color:var(--silver)}
+.slot[data-rank="3"]:focus-within{border-left-color:var(--bronze)}
+.slot__rank{flex:0 0 30px;font-size:13px;font-weight:600;color:#9FBCA9}
+.slot__input{
+  flex:0 0 84px;min-height:40px;padding:0 10px;
+  border:1.5px solid rgba(255,255,255,.3);border-radius:7px;
+  background:rgba(255,255,255,.06);color:#fff;font-size:15.5px;
+  letter-spacing:.03em;
+}
+.slot__input::placeholder{color:#8FA79A}
+.slot__fb{
+  flex:1 1 100%;min-width:0;font-size:13px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#D9E5DC;
+}
+.slot__fb--ok{color:#B9E2C9}
+.slot__fb--err{color:#F3B9A8}
+
+/* ---- main ---- */
+main{max-width:640px;margin:0 auto;padding:0 16px}
+.hint{margin:14px 2px;font-size:14px;color:var(--ink-soft)}
+.empty{padding:28px 4px;color:var(--ink-soft);font-size:15px}
+
+/* ---- dock + buttons ---- */
+.dock{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:linear-gradient(to top,var(--paper) 62%,rgba(246,247,244,0));
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+}
+.btn{
+  display:block;width:100%;max-width:608px;margin:0 auto;
+  min-height:var(--tap);padding:0 18px;
+  background:var(--green);color:#fff;border:0;border-radius:9px;
+  font-size:16.5px;font-weight:600;cursor:pointer;
+}
+.btn:disabled{background:#C3CCC4;color:#6C7A70;cursor:default}
+.btn--quiet{background:none;color:var(--green);border:1.5px solid var(--line)}
+
+/* ---- sheet ---- */
+.sheet{
+  width:min(520px,calc(100% - 24px));margin:auto;padding:22px;
+  border:0;border-radius:14px;background:var(--paper);color:var(--ink);
+}
+.sheet::backdrop{background:rgba(16,64,42,.55)}
+.sheet h2{margin:0 0 12px;font-size:20px;font-weight:600}
+.recap{margin:0 0 18px;padding-left:20px;font-size:15.5px}
+.recap li{margin:5px 0}
+.field{display:block;margin-bottom:14px}
+.field span{display:block;margin-bottom:6px;font-size:14px;color:var(--ink-soft)}
+.field input{
+  width:100%;min-height:var(--tap);padding:0 14px;
+  border:1.5px solid var(--line);border-radius:9px;background:#fff;
+  letter-spacing:.06em;
+}
+.err{margin:0 0 14px;padding:10px 12px;border-radius:8px;
+  background:#FBE9E4;color:#8A2B12;font-size:14.5px}
+.sheet__actions{display:flex;gap:10px}
+.sheet__actions .btn{flex:1}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

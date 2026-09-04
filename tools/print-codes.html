@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Print voting codes — ICATS-FHM 2026</title>
+<style>
+  body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       margin:0;padding:24px;color:#16241C;background:#F6F7F4}
+  .setup{max-width:640px;margin:0 auto 24px}
+  textarea{width:100%;height:130px;padding:10px;border:1.5px solid #DCE2DB;border-radius:8px}
+  input{padding:8px 10px;border:1.5px solid #DCE2DB;border-radius:8px;width:100%;max-width:420px}
+  button{margin-top:10px;padding:12px 18px;background:#175E45;color:#fff;border:0;
+         border-radius:8px;font-size:16px;cursor:pointer}
+  label{display:block;margin:14px 0 6px;font-size:14px;color:#5A6A60}
+  .slips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:900px;margin:0 auto}
+  .slip{border:1px dashed #9AA79E;border-radius:6px;padding:10px;text-align:center;background:#fff}
+  .slip img{width:104px;height:104px;display:block;margin:0 auto 6px}
+  .slip .code{font-size:17px;font-weight:700;letter-spacing:.08em;font-family:ui-monospace,Menlo,monospace}
+  .slip .cap{font-size:10.5px;color:#5A6A60;margin-top:3px;line-height:1.3}
+  @media print{.setup{display:none}body{background:#fff;padding:8px}}
+</style>
+</head>
+<body>
+<div class="setup">
+  <h1 style="font-size:20px;margin:0 0 6px">Print voting codes</h1>
+  <p style="margin:0;color:#5A6A60;font-size:14.5px">
+    Cut into slips and hand one to each attendee at registration. Scanning the QR opens the
+    ballot with the code already filled in.</p>
+  <label for="url">Your GitHub Pages URL</label>
+  <input id="url" value="https://USERNAME.github.io/icats-poster-vote/">
+  <label for="codes">Codes — paste the Tokens column from your Google Sheet</label>
+  <textarea id="codes" placeholder="K7M2-QX9&#10;H4TR-9WD"></textarea>
+  <button onclick="build()">Build slips</button>
+</div>
+<div class="slips" id="out"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+async function build(){
+  var base = document.getElementById('url').value.trim().replace(/\/?$/,'/');
+  var codes = document.getElementById('codes').value.split(/\r?\n/)
+    .map(function(s){return s.trim().toUpperCase()}).filter(Boolean);
+  var out = document.getElementById('out');
+  out.innerHTML = '';
+  for (const c of codes){
+    var png = await QRCode.toDataURL(base + '?t=' + encodeURIComponent(c), {margin:1, width:208});
+    var d = document.createElement('div');
+    d.className = 'slip';
+    d.innerHTML = '<img src="' + png + '" alt=""><div class="code">' + c + '</div>' +
+                  '<div class="cap">ICATS-FHM 2026 best poster vote<br>One ballot per code</div>';
+    out.appendChild(d);
+  }
+  window.print();
+}
+</script>
+</body>
+</html>
