@@ -1,63 +1,81 @@
-<!DOCTYPE html>
+&lt;!DOCTYPE html&gt;
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10402A">
+<meta name="theme-color" content="#3d472b">
 <title>Poster vote — ICATS-FHM 2026</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&amp;family=Figtree:wght@400;600&amp;display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="bar">
   <div class="bar__inner">
-    <p class="conf">ICATS-FHM 2026 · Best poster vote</p>
+    <p class="conf">ICATS-FHM 2026 · Hokkaido University</p>
+    <h1 class="bar__title">Best poster vote</h1>
     <ol class="ballot" id="ballot" aria-label="Your ranked choices">
-      <li class="slot" data-rank="1">
-        <span class="slot__rank">1st</span>
-        <input class="slot__input" id="pick1" type="text" inputmode="numeric" autocomplete="off" placeholder="Poster #" aria-label="1st choice poster number" disabled>
-        <span class="slot__fb" id="fb1"></span>
-      </li>
-      <li class="slot" data-rank="2">
-        <span class="slot__rank">2nd</span>
-        <input class="slot__input" id="pick2" type="text" inputmode="numeric" autocomplete="off" placeholder="Poster #" aria-label="2nd choice poster number" disabled>
-        <span class="slot__fb" id="fb2"></span>
-      </li>
-      <li class="slot" data-rank="3">
-        <span class="slot__rank">3rd</span>
-        <input class="slot__input" id="pick3" type="text" inputmode="numeric" autocomplete="off" placeholder="Poster #" aria-label="3rd choice poster number" disabled>
-        <span class="slot__fb" id="fb3"></span>
-      </li>
+      <li><button class="slot" type="button" data-i="0" aria-label="1st choice">
+        <span class="slot__rank">1st</span><span class="slot__val" id="val1">––</span><span class="slot__note" id="note1"></span>
+      </button></li>
+      <li><button class="slot" type="button" data-i="1" aria-label="2nd choice">
+        <span class="slot__rank">2nd</span><span class="slot__val" id="val2">––</span><span class="slot__note" id="note2"></span>
+      </button></li>
+      <li><button class="slot" type="button" data-i="2" aria-label="3rd choice">
+        <span class="slot__rank">3rd</span><span class="slot__val" id="val3">––</span><span class="slot__note" id="note3"></span>
+      </button></li>
     </ol>
   </div>
 </header>
 
 <main>
   <p class="hint" id="hint">Loading poster list…</p>
+
+  <div class="pad" id="pad" hidden>
+    <button class="key" type="button" data-d="1">1</button>
+    <button class="key" type="button" data-d="2">2</button>
+    <button class="key" type="button" data-d="3">3</button>
+    <button class="key" type="button" data-d="4">4</button>
+    <button class="key" type="button" data-d="5">5</button>
+    <button class="key" type="button" data-d="6">6</button>
+    <button class="key" type="button" data-d="7">7</button>
+    <button class="key" type="button" data-d="8">8</button>
+    <button class="key" type="button" data-d="9">9</button>
+    <button class="key key--quiet" type="button" id="del" aria-label="Delete">⌫</button>
+    <button class="key" type="button" data-d="0">0</button>
+    <button class="key key--quiet" type="button" id="nextSlot" aria-label="Next rank">→</button>
+  </div>
 </main>
 
-<div class="dock">
-  <button id="review" class="btn" disabled>Choose 3 posters to continue</button>
+<div class="dock" id="dock" hidden>
+  <button id="review" class="btn" type="button" disabled>0 of 3 chosen</button>
+  <p class="dock__note" id="deadline"></p>
 </div>
 
 <dialog id="submit" class="sheet" aria-labelledby="sheetTitle">
   <h2 id="sheetTitle">Confirm your ballot</h2>
+  <p class="sheet__sub">3 points to your first choice, 2 to the second, 1 to the third.</p>
   <ol class="recap" id="recap"></ol>
   <label class="field">
-    <span>Enter your exact name as per your conference ID card</span>
+    <span>Your name, exactly as on your conference ID card</span>
     <input id="voter" autocomplete="name" autocapitalize="words" spellcheck="false"
            inputmode="text" placeholder="e.g. Taro Yamada">
   </label>
   <p class="err" id="err" hidden></p>
   <div class="sheet__actions">
-    <button id="cancel" class="btn btn--quiet">Back</button>
-    <button id="send" class="btn">Submit ballot</button>
+    <button id="cancel" class="btn btn--quiet" type="button">Back</button>
+    <button id="send" class="btn" type="button">Submit ballot</button>
   </div>
 </dialog>
 
-<dialog id="done" class="sheet">
+<dialog id="done" class="sheet sheet--center">
+  <div class="mark mark--ok" aria-hidden="true">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  </div>
   <h2>Ballot received</h2>
   <p>Thank you. Winners are announced at the closing ceremony.</p>
+  <ul class="pills" id="donePills"></ul>
 </dialog>
 
 <script src="config.js"></script>

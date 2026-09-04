@@ -6,5 +6,11 @@ window.CONFIG = {
   OPEN: true,
 
   // Optional hard deadline, local device time. Leave "" to ignore.
-  CLOSES_AT: ""   // e.g. "2026-09-10T16:15:00+09:00"
+  CLOSES_AT: "",   // e.g. "2026-09-10T16:15:00+09:00"
+
+  // Optional: before this moment the page shows "Voting opens later today".
+  OPENS_AT: "",    // e.g. "2026-09-10T15:00:00+09:00"
+
+  // Small line under the submit button. Leave "" to hide it.
+  DEADLINE_NOTE: "Voting closes 16:15 JST, 10 September"
 };
