@@ -2,9 +2,12 @@
  * ICATS-FHM 2026 — poster vote backend.
  * Bound to a Google Sheet. Deploy as: Web app, execute as Me, access Anyone.
  *
+ * Voters identify themselves by typing their name as printed on their
+ * conference ID card. Ballots are recorded as given and not checked against a
+ * roster, so scan the Votes sheet for duplicate names before tallying.
+ *
  * Sheets used (setup() creates them):
- *   Tokens   code | used | usedAt | ownPoster
- *   Votes    timestamp | code | first | second | third
+ *   Votes    timestamp | name | first | second | third
  *   Results  written by tally()
  */
 
@@ -16,34 +19,15 @@ var MAX_PER_GROUP = 2;   // cap on awards per research group; 0 disables
 
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  sheet_(ss, 'Tokens', ['code', 'used', 'usedAt', 'ownPoster']);
-  sheet_(ss, 'Votes', ['timestamp', 'code', 'first', 'second', 'third']);
+  sheet_(ss, 'Votes', ['timestamp', 'name', 'first', 'second', 'third']);
   sheet_(ss, 'Results', ['rank', 'poster', 'points', 'firsts', 'seconds', 'thirds']);
-  SpreadsheetApp.getUi().alert('Sheets ready. Now run generateTokens.');
+  SpreadsheetApp.getUi().alert('Sheets ready. Deploy the web app to start collecting ballots.');
 }
 
 function sheet_(ss, name, header) {
   var s = ss.getSheetByName(name) || ss.insertSheet(name);
   if (s.getLastRow() === 0) s.appendRow(header);
   return s;
-}
-
-/** Creates 160 unique voting codes. Print these and hand one to each attendee. */
-function generateTokens() {
-  var COUNT = 160;
-  var chars = 'ACDEFGHJKMNPQRTUVWXY3479';   // no look-alikes
-  var s = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tokens');
-  var seen = {}, rows = [];
-  while (rows.length < COUNT) {
-    var c = '';
-    for (var i = 0; i < 7; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
-    c = c.slice(0, 4) + '-' + c.slice(4);
-    if (seen[c]) continue;
-    seen[c] = 1;
-    rows.push([c, '', '', '']);
-  }
-  s.getRange(2, 1, rows.length, 4).setValues(rows);
-  SpreadsheetApp.getUi().alert(COUNT + ' codes created in the Tokens sheet.');
 }
 
 // ---------------------------------------------------------------- web app
@@ -62,9 +46,12 @@ function doPost(e) {
 
   try {
     var body = JSON.parse(e.postData.contents);
-    var code = String(body.token || '').trim().toUpperCase();
+    var name = String(body.name || '').trim().replace(/\s+/g, ' ');
     var picks = body.picks || [];
 
+    if (name.length < 3) {
+      return json_({ ok: false, error: 'Enter your name exactly as printed on your conference ID card.' });
+    }
     if (picks.length !== 3) return json_({ ok: false, error: 'Choose exactly three posters.' });
 
     var valid = /^P\d{2}$/;
@@ -79,23 +66,7 @@ function doPost(e) {
     }
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var tokens = ss.getSheetByName('Tokens');
-    var data = tokens.getRange(2, 1, Math.max(tokens.getLastRow() - 1, 1), 4).getValues();
-
-    var row = -1;
-    for (var r = 0; r < data.length; r++) {
-      if (String(data[r][0]).trim().toUpperCase() === code) { row = r; break; }
-    }
-    if (row === -1) return json_({ ok: false, error: 'That code is not on the list. Check it at the registration desk.' });
-    if (data[row][1] === 'yes') return json_({ ok: false, error: 'This code has already been used to vote.' });
-
-    var own = String(data[row][3] || '').trim().toUpperCase();
-    if (own && picks.indexOf(own) > -1) {
-      return json_({ ok: false, error: 'You cannot vote for your own poster (' + own + ').' });
-    }
-
-    ss.getSheetByName('Votes').appendRow([new Date(), code, picks[0], picks[1], picks[2]]);
-    tokens.getRange(row + 2, 2, 1, 2).setValues([['yes', new Date()]]);
+    ss.getSheetByName('Votes').appendRow([new Date(), name, picks[0], picks[1], picks[2]]);
 
     return json_({ ok: true });
   } catch (err) {
@@ -118,6 +89,16 @@ function tally() {
   var votes = ss.getSheetByName('Votes');
   var last = votes.getLastRow();
   if (last < 2) { SpreadsheetApp.getUi().alert('No ballots yet.'); return; }
+
+  // Names are self-reported and unenforced, so flag anyone who voted more than once.
+  var names = votes.getRange(2, 2, last - 1, 1).getValues();
+  var seenNames = {}, repeats = [];
+  names.forEach(function (n) {
+    var key = String(n[0]).trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!key) return;
+    seenNames[key] = (seenNames[key] || 0) + 1;
+    if (seenNames[key] === 2) repeats.push(String(n[0]).trim());
+  });
 
   var rows = votes.getRange(2, 3, last - 1, 3).getValues();
   var score = {};
@@ -145,6 +126,11 @@ function tally() {
   SpreadsheetApp.getUi().alert(
     rows.length + ' ballots counted.\nTop ' + AWARDS + ': ' +
     ranked.slice(0, AWARDS).map(function (r) { return r[0]; }).join(', ') +
+    (repeats.length
+      ? '\n\nWARNING: these names appear on more than one ballot, and all of ' +
+        'their ballots were counted — remove the extras in Votes and tally again:\n' +
+        repeats.join(', ')
+      : '\n\nNo duplicate voter names found.') +
     '\n\nCheck the group cap (max ' + MAX_PER_GROUP + ' per research group) before announcing.'
   );
 }
@@ -152,7 +138,6 @@ function tally() {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Poster vote')
     .addItem('Set up sheets', 'setup')
-    .addItem('Generate voting codes', 'generateTokens')
     .addItem('Tally results', 'tally')
     .addToUi();
 }

@@ -10,7 +10,7 @@
   var pickEls = [$("pick1"), $("pick2"), $("pick3")];
   var fbEls = [$("fb1"), $("fb2"), $("fb3")];
   var reviewEl = $("review"), sheetEl = $("submit"), doneEl = $("done"),
-      recapEl = $("recap"), tokenEl = $("token"), errEl = $("err"),
+      recapEl = $("recap"), voterEl = $("voter"), errEl = $("err"),
       hintEl = $("hint");
 
   function esc(s) {
@@ -82,7 +82,7 @@
     }).join("");
     errEl.hidden = true;
     sheetEl.showModal();
-    tokenEl.focus();
+    voterEl.focus();
   });
 
   $("cancel").addEventListener("click", function () { sheetEl.close(); });
@@ -97,8 +97,8 @@
 
   $("send").addEventListener("click", function () {
     if (sending) return;
-    var token = tokenEl.value.trim().toUpperCase();
-    if (token.length < 4) return fail("Enter the voting code printed on your badge.");
+    var name = voterEl.value.trim().replace(/\s+/g, " ");
+    if (name.length < 3) return fail("Enter your name exactly as printed on your conference ID card.");
     if (!picks[0] || !picks[1] || !picks[2]) return fail("Your ballot needs three different posters.");
 
     sending = true;
@@ -109,11 +109,11 @@
     fetch(window.CONFIG.ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ token: token, picks: picks })
+      body: JSON.stringify({ name: name, picks: picks })
     })
       .then(function (r) { return r.json(); })
       .then(function (res) {
-        if (!res.ok) return fail(res.error || "That code was not accepted.");
+        if (!res.ok) return fail(res.error || "That ballot was not accepted.");
         localStorage.setItem(LS_KEY, JSON.stringify({ at: Date.now(), picks: picks }));
         sheetEl.close();
         doneEl.showModal();
@@ -141,8 +141,6 @@
         var prev = JSON.parse(localStorage.getItem(LS_KEY));
         return lockOut("You have already voted", "Your ballot: " + prev.picks.join(", ") + ".");
       }
-      var t = new URLSearchParams(location.search).get("t");
-      if (t) tokenEl.value = t.trim().toUpperCase();
       pickEls.forEach(function (el) { el.disabled = false; });
       renderPicks();
       hintEl.textContent = posters.length
